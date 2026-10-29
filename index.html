@@ -4,228 +4,373 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Explore wallet security, post-quantum cryptography, and smart account technology with QVault.">
-  <title>QVault | Explore Wallet Security</title>
+  <meta name="theme-color" content="#100b20">
+  <meta name="description" content="QVault is an educational project exploring post-quantum cryptography, wallet safety and smart accounts.">
+  <title>QVault — Explore Digital Security</title>
   <style>
     :root {
-      color-scheme: dark;
-      --bg: #0b1020;
-      --panel: #121a30;
+      --bg: #0b0815;
+      --panel: #151027;
+      --panel2: #1d1534;
       --purple: #a78bfa;
+      --bright: #c4b5fd;
       --text: #f5f3ff;
-      --muted: #aab3ca;
-      --border: #293451;
+      --muted: #aaa2bd;
+      --border: #302547;
+      --green: #86efac;
     }
+
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      font-family: Arial, sans-serif;
       background: var(--bg);
       color: var(--text);
+      font-family: Inter, system-ui, -apple-system, sans-serif;
       line-height: 1.65;
     }
     a { color: inherit; text-decoration: none; }
+    button { font: inherit; cursor: pointer; }
+    .container { width: min(1100px, 92%); margin: auto; }
+
     header {
-      padding: 20px 8%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(11, 8, 21, .94);
       border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
     }
-    .logo { font-size: 24px; font-weight: 800; }
-    .logo span { color: var(--purple); }
-    nav { display: flex; gap: 22px; font-size: 14px; }
-    nav a:hover { color: var(--purple); }
+    .nav {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .brand { font-size: 1.45rem; font-weight: 850; letter-spacing: -.7px; }
+    .brand span { color: var(--purple); }
+    .nav-links { display: flex; gap: 22px; flex-wrap: wrap; }
+    .nav-links a { color: var(--muted); font-size: .92rem; }
+    .nav-links a:hover { color: var(--bright); }
+
     .hero {
-      padding: 90px 8% 75px;
+      padding: 86px 0 68px;
+      background: radial-gradient(ellipse at 50% 0%, #39215c 0%, #171027 38%, var(--bg) 76%);
       text-align: center;
-      background: radial-gradient(ellipse at top, #292052 0%, var(--bg) 65%);
+    }
+    .eyebrow {
+      display: inline-block;
+      color: var(--bright);
+      background: #281b40;
+      border: 1px solid #4a356c;
+      border-radius: 99px;
+      padding: 6px 13px;
+      font-size: .8rem;
+      font-weight: 700;
+      letter-spacing: .5px;
+    }
+    h1 { font-size: clamp(2.5rem, 7vw, 4.8rem); line-height: 1.08; letter-spacing: -2px; margin: 22px 0; }
+    h1 span { color: var(--purple); }
+    .hero p { max-width: 680px; margin: 0 auto 27px; color: var(--muted); font-size: 1.08rem; }
+    .actions { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 18px;
+      color: var(--text);
+      background: var(--panel2);
+      font-weight: 700;
+    }
+    .btn.primary { color: #160d26; background: var(--purple); border-color: var(--purple); }
+    .btn:hover { transform: translateY(-1px); filter: brightness(1.08); }
+
+    section { padding: 64px 0; scroll-margin-top: 80px; }
+    .section-heading { margin-bottom: 27px; }
+    .section-heading h2 { font-size: clamp(1.8rem, 4vw, 2.5rem); margin: 0 0 8px; letter-spacing: -.8px; }
+    .section-heading p { color: var(--muted); max-width: 690px; margin: 0; }
+    .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 17px; }
+    .card {
+      background: linear-gradient(145deg, var(--panel), #100c1d);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 23px;
+      min-width: 0;
+    }
+    .card h3 { margin: 10px 0 7px; font-size: 1.12rem; }
+    .card p { color: var(--muted); margin: 0; font-size: .94rem; }
+    .symbol {
+      width: 43px; height: 43px; display: grid; place-items: center;
+      border-radius: 12px; background: #2a1c42; font-size: 1.35rem;
     }
     .tag {
-      display: inline-block;
-      border: 1px solid #51417b;
-      border-radius: 30px;
-      padding: 5px 14px;
-      color: #d6c8ff;
-      font-size: 13px;
+      display: inline-block; margin-top: 15px; color: var(--bright);
+      background: #251a38; border-radius: 7px; padding: 4px 8px; font-size: .76rem;
     }
-    h1 {
-      font-size: clamp(38px, 7vw, 66px);
-      line-height: 1.1;
-      margin: 25px auto;
-      max-width: 850px;
-      letter-spacing: -2px;
+
+    .dashboard {
+      display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px;
     }
-    h1 span { color: var(--purple); }
-    .hero p {
-      color: var(--muted);
-      max-width: 650px;
-      margin: 0 auto 28px;
+    .progress-track { height: 9px; background: #302547; border-radius: 99px; overflow: hidden; margin: 15px 0; }
+    .progress-fill { height: 100%; width: 0; background: var(--purple); transition: width .2s; }
+    .check-item {
+      display: flex; align-items: flex-start; gap: 11px;
+      padding: 12px 0; border-bottom: 1px solid var(--border);
+      color: #e5def5;
     }
-    .button {
-      display: inline-block;
-      background: var(--purple);
-      color: #160e2c;
-      padding: 12px 21px;
-      border-radius: 9px;
-      font-weight: 700;
-      margin: 5px;
+    .check-item:last-child { border-bottom: 0; }
+    .check-item input { accent-color: var(--purple); margin-top: 6px; width: 17px; height: 17px; flex-shrink: 0; }
+    .small { font-size: .85rem; color: var(--muted); }
+    .status { color: var(--green); font-weight: 700; }
+    .reset { border: 0; background: transparent; color: var(--bright); padding: 8px 0; }
+
+    .lesson { border-top: 1px solid var(--border); }
+    .lesson button {
+      width: 100%; text-align: left; display: flex; justify-content: space-between;
+      gap: 15px; padding: 17px 0; background: transparent; color: var(--text);
+      border: 0; font-weight: 750;
     }
-    .button.secondary {
-      background: transparent;
-      border: 1px solid var(--border);
-      color: var(--text);
+    .lesson-content { display: none; color: var(--muted); padding: 0 0 18px; }
+    .lesson.open .lesson-content { display: block; }
+    .lesson button span:last-child { color: var(--purple); }
+
+    .quiz-options { display: grid; gap: 10px; margin-top: 16px; }
+    .quiz-options button {
+      background: #171128; border: 1px solid var(--border); border-radius: 10px;
+      color: var(--text); padding: 12px; text-align: left;
     }
-    section { padding: 55px 8%; }
-    .section-title { font-size: 30px; margin-bottom: 8px; }
-    .intro { color: var(--muted); margin-top: 0; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 18px;
-      margin-top: 28px;
-    }
-    .card {
-      padding: 23px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 15px;
-    }
-    .card .icon { font-size: 28px; }
-    .card h3 { margin-bottom: 8px; }
-    .card p { color: var(--muted); font-size: 14px; }
-    .status {
-      display: inline-block;
-      color: #d6c8ff;
-      background: #292052;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 12px;
-    }
+    .quiz-options button:hover { border-color: var(--purple); }
+    #quiz-result { margin-top: 14px; color: var(--bright); min-height: 28px; }
+
+    .roadmap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+    .step-number { color: var(--purple); font-weight: 850; font-size: .85rem; }
     .notice {
-      border-left: 3px solid var(--purple);
-      padding: 15px 18px;
-      background: var(--panel);
-      color: var(--muted);
-      border-radius: 5px;
+      margin-top: 24px; padding: 17px 19px; border: 1px solid #66502c;
+      background: #211a16; color: #e8d4ad; border-radius: 13px; font-size: .9rem;
     }
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 25px 8%;
-      color: var(--muted);
-      font-size: 13px;
-      text-align: center;
-    }
-    @media (max-width: 600px) {
-      header { padding: 16px 5%; flex-wrap: wrap; gap: 12px; }
-      nav { gap: 12px; flex-wrap: wrap; }
-      .hero { padding: 65px 6%; }
-      section { padding: 40px 6%; }
+    footer { border-top: 1px solid var(--border); padding: 30px 0; color: var(--muted); font-size: .85rem; }
+    .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
+
+    @media (max-width: 760px) {
+      .nav { align-items: flex-start; padding: 17px 0; flex-direction: column; }
+      .nav-links { gap: 13px; }
+      .hero { padding: 65px 0 50px; }
+      .grid, .dashboard, .roadmap { grid-template-columns: 1fr; }
+      section { padding: 48px 0; }
     }
   </style>
 </head>
 <body>
   <header>
-    <a class="logo" href="#">Q<span>Vault</span></a>
-    <nav>
-      <a href="#learn">Learn</a>
-      <a href="#security">Security</a>
-      <a href="#roadmap">Roadmap</a>
-    </nav>
+    <div class="container nav">
+      <a class="brand" href="#home">Q<span>Vault</span></a>
+      <nav class="nav-links" aria-label="Main navigation">
+        <a href="#explore">Explore</a>
+        <a href="#dashboard">Dashboard</a>
+        <a href="#safety">Wallet Safety</a>
+        <a href="#roadmap">Roadmap</a>
+      </nav>
+    </div>
   </header>
 
   <main>
-    <section class="hero">
-      <span class="tag">An early-stage QMS ecosystem concept</span>
-      <h1>Explore the future of <span>wallet security.</span></h1>
-      <p>
-        A learning-focused project exploring post-quantum cryptography,
-        blockchain security, and smarter wallet experiences.
-      </p>
-      <a class="button" href="#learn">Explore the project</a>
-      <a class="button secondary"
-         href="https://github.com/irfanzaib174/qvault">
-        View on GitHub
-      </a>
-    </section>
-
-    <section id="learn">
-      <h2 class="section-title">Understand the technology</h2>
-      <p class="intro">
-        Learn about the ideas shaping the next generation of blockchain security.
-      </p>
-      <div class="grid">
-        <article class="card">
-          <div class="icon">🔐</div>
-          <h3>Post-Quantum Cryptography</h3>
-          <p>
-            Discover how cryptographic methods designed to resist
-            quantum-computer attacks may help protect digital systems.
-          </p>
-        </article>
-        <article class="card">
-          <div class="icon">👛</div>
-          <h3>Wallet Security</h3>
-          <p>
-            Learn about private keys, signatures, recovery methods,
-            and common wallet security risks.
-          </p>
-        </article>
-        <article class="card">
-          <div class="icon">⚙️</div>
-          <h3>Smart Accounts</h3>
-          <p>
-            Explore account abstraction and ERC-4337 concepts
-            for more flexible blockchain account experiences.
-          </p>
-        </article>
+    <section class="hero" id="home">
+      <div class="container">
+        <span class="eyebrow">SECURITY EDUCATION • EARLY-STAGE PROJECT</span>
+        <h1>Explore the future of<br><span>digital security.</span></h1>
+        <p>
+          Learn about post-quantum cryptography, safer wallet habits and
+          smart-account technology through a simple interactive learning hub.
+        </p>
+        <div class="actions">
+          <a class="btn primary" href="#dashboard">Explore Dashboard ↗</a>
+          <a class="btn" href="#explore">Start Learning</a>
+        </div>
       </div>
     </section>
 
-    <section id="security">
-      <h2 class="section-title">Security starts with understanding</h2>
-      <p class="intro">
-        QVault is an educational prototype, not a wallet or an auditing service.
-      </p>
-      <div class="notice">
-        Never enter your seed phrase, private key, or wallet password
-        into this demo. No wallet connection or security scan is implemented.
-        Post-quantum protection is not currently provided by QVault.
+    <section id="explore">
+      <div class="container">
+        <div class="section-heading">
+          <h2>What is QVault?</h2>
+          <p>An educational project exploring important ideas in blockchain security. Learn the concepts before trying real tools.</p>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <div class="symbol">◈</div>
+            <h3>Post-Quantum Cryptography</h3>
+            <p>Discover cryptographic methods designed to resist attacks from both classical and quantum computers.</p>
+            <span class="tag">Learn the basics</span>
+          </article>
+          <article class="card">
+            <div class="symbol">⬡</div>
+            <h3>Wallet Safety</h3>
+            <p>Build safer habits for protecting recovery phrases, private keys and your online identity.</p>
+            <span class="tag">Safety checklist</span>
+          </article>
+          <article class="card">
+            <div class="symbol">⌘</div>
+            <h3>Smart Accounts</h3>
+            <p>Understand how programmable accounts can support features such as spending rules and transaction batching.</p>
+            <span class="tag">Account concepts</span>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="dashboard">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Your learning dashboard</h2>
+          <p>Track your progress through this demo. Your checklist works in this page, but progress is not synced to an account or server.</p>
+        </div>
+        <div class="dashboard">
+          <div class="card">
+            <h3>Wallet Safety Checklist</h3>
+            <p>Mark each safety habit as you learn it.</p>
+            <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+            <p id="progress-label" class="status" aria-live="polite">0 of 5 completed</p>
+            <div id="checklist">
+              <label class="check-item"><input type="checkbox"><span>Never share a recovery phrase or private key.</span></label>
+              <label class="check-item"><input type="checkbox"><span>Verify website addresses before connecting a wallet.</span></label>
+              <label class="check-item"><input type="checkbox"><span>Read transaction details before approving them.</span></label>
+              <label class="check-item"><input type="checkbox"><span>Use a unique password and secure account recovery.</span></label>
+              <label class="check-item"><input type="checkbox"><span>Be cautious of urgent messages and unexpected links.</span></label>
+            </div>
+            <button class="reset" id="reset-checklist" type="button">Reset checklist ↺</button>
+          </div>
+          <div class="card">
+            <h3>Quick knowledge check</h3>
+            <p>What should you do if a website asks you to enter your wallet recovery phrase to “verify” your wallet?</p>
+            <div class="quiz-options">
+              <button type="button" data-answer="wrong">Enter it if the website looks professional.</button>
+              <button type="button" data-answer="right">Do not enter it; leave the site and verify through trusted official channels.</button>
+              <button type="button" data-answer="wrong">Send it to support so they can check it.</button>
+            </div>
+            <p id="quiz-result" aria-live="polite"></p>
+            <p class="small">Educational quiz only. No wallet is connected.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="safety">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Security learning center</h2>
+          <p>Open a topic to learn the core idea. These lessons are educational, not a security audit.</p>
+        </div>
+        <div class="card">
+          <div class="lesson">
+            <button type="button" aria-expanded="false"><span>01 — What is post-quantum cryptography?</span><span>＋</span></button>
+            <div class="lesson-content">
+              Post-quantum cryptography refers to cryptographic algorithms designed to remain secure against attacks from future quantum computers as well as conventional computers. Standardization and implementation are ongoing; using the term alone does not make a wallet quantum-resistant.
+            </div>
+          </div>
+          <div class="lesson">
+            <button type="button" aria-expanded="false"><span>02 — Why do recovery phrases matter?</span><span>＋</span></button>
+            <div class="lesson-content">
+              A recovery phrase may give someone control over the assets associated with a wallet. Never share it with a person, website or support agent. QVault will never ask you for a recovery phrase or private key.
+            </div>
+          </div>
+          <div class="lesson">
+            <button type="button" aria-expanded="false"><span>03 — What are smart accounts?</span><span>＋</span></button>
+            <div class="lesson-content">
+              Smart accounts use programmable logic to manage transactions. Depending on their design, they may support features such as sponsored fees, spending limits or multiple approval steps. These features do not automatically guarantee security or post-quantum protection.
+            </div>
+          </div>
+          <div class="lesson">
+            <button type="button" aria-expanded="false"><span>04 — What is a phishing attack?</span><span>＋</span></button>
+            <div class="lesson-content">
+              Phishing attempts trick people into revealing secrets or approving harmful actions. Check domains carefully, avoid unexpected links, and never approve a transaction you do not understand.
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
     <section id="roadmap">
-      <h2 class="section-title">Project roadmap</h2>
-      <p class="intro">Planned milestones — not completed features.</p>
-      <div class="grid">
-        <article class="card">
-          <span class="status">Current stage</span>
-          <h3>01 · Foundation</h3>
-          <p>Build the first educational website and document the project.</p>
-        </article>
-        <article class="card">
-          <span class="status">Planned</span>
-          <h3>02 · Research</h3>
-          <p>Study wallet security and post-quantum cryptography standards.</p>
-        </article>
-        <article class="card">
-          <span class="status">Planned</span>
-          <h3>03 · Prototype</h3>
-          <p>Investigate a simple smart-account learning demo for QMS testnet.</p>
-        </article>
+      <div class="container">
+        <div class="section-heading">
+          <h2>Project roadmap</h2>
+          <p>Planned milestones for this early-stage concept. These are goals, not completed technical integrations.</p>
+        </div>
+        <div class="roadmap">
+          <article class="card">
+            <div class="step-number">PHASE 01</div>
+            <h3>Learning foundation</h3>
+            <p>Publish accessible security lessons and practical wallet-safety guidance.</p>
+            <span class="tag">Current prototype</span>
+          </article>
+          <article class="card">
+            <div class="step-number">PHASE 02</div>
+            <h3>Technical research</h3>
+            <p>Study standardized post-quantum algorithms, wallet architecture and smart-account designs.</p>
+            <span class="tag">Planned</span>
+          </article>
+          <article class="card">
+            <div class="step-number">PHASE 03</div>
+            <h3>Prototype exploration</h3>
+            <p>Explore safe demonstrations and seek technical review before considering integrations.</p>
+            <span class="tag">Future goal</span>
+          </article>
+        </div>
+        <div class="notice">
+          <strong>Important:</strong> QVault is an independent educational prototype. It does not connect to wallets, inspect transactions, scan for threats or provide post-quantum protection. It is not affiliated with or endorsed by QMS. Never enter a seed phrase, private key or password on this website.
+        </div>
       </div>
     </section>
   </main>
 
   <footer>
-    <p>QVault · Independent early-stage project concept</p>
-    <p>Not affiliated with or endorsed by QMS. No security guarantees.</p>
-    <p>
-      <a href="https://github.com/irfanzaib174/qvault">
-        GitHub Repository
-      </a>
-    </p>
+    <div class="container footer-inner">
+      <div><strong>QVault</strong> — Explore. Learn. Protect.</div>
+      <div>Independent early-stage project concept · <span id="year"></span></div>
+    </div>
   </footer>
+
+  <script>
+    document.getElementById("year").textContent = new Date().getFullYear();
+
+    const checks = [...document.querySelectorAll('#checklist input[type="checkbox"]')];
+    const fill = document.getElementById("progress-fill");
+    const label = document.getElementById("progress-label");
+
+    function updateProgress() {
+      const done = checks.filter(check => check.checked).length;
+      fill.style.width = (done / checks.length * 100) + "%";
+      label.textContent = done + " of " + checks.length + " completed";
+    }
+
+    checks.forEach(check => check.addEventListener("change", updateProgress));
+
+    document.getElementById("reset-checklist").addEventListener("click", () => {
+      checks.forEach(check => check.checked = false);
+      updateProgress();
+    });
+
+    document.querySelectorAll(".lesson button").forEach(button => {
+      button.addEventListener("click", () => {
+        const lesson = button.parentElement;
+        const isOpen = lesson.classList.toggle("open");
+        button.setAttribute("aria-expanded", String(isOpen));
+        button.querySelector("span:last-child").textContent = isOpen ? "−" : "＋";
+      });
+    });
+
+    document.querySelectorAll(".quiz-options button").forEach(button => {
+      button.addEventListener("click", () => {
+        const result = document.getElementById("quiz-result");
+        if (button.dataset.answer === "right") {
+          result.textContent = "Correct! Never share your recovery phrase. ✓";
+        } else {
+          result.textContent = "Not safe. Never share your recovery phrase or private key. Try again.";
+        }
+      });
+    });
+  </script>
 </body>
 </html>
