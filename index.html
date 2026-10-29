@@ -208,6 +208,7 @@
         <a href="#architecture">Architecture</a>
         <a href="#wallet-connect">Wallet Connect</a>
         <a href="#wallet-tools">Wallet Tools</a>
+        <a href="#transactions">Transactions</a>
         <a href="#dashboard">Dashboard</a>
         <a href="#knowledge-quiz">Knowledge Quiz</a>
         <a href="#safety">Wallet Safety</a>
@@ -353,6 +354,36 @@
       </div>
     </section>
 
+
+    <section id="transactions">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Recent transactions</h2>
+          <p>Read-only public transaction data for supported networks. This section does not sign or send transactions.</p>
+        </div>
+        <div class="card">
+          <div class="tool-actions">
+            <button class="btn primary" id="load-transactions" type="button">Load transaction history</button>
+            <span class="pill-status" id="tx-network">Connect wallet first</span>
+          </div>
+          <p class="small" id="tx-message" role="status" aria-live="polite">Connect Rabby, then load public transaction history for a supported network.</p>
+          <div style="overflow-x:auto">
+            <table style="width:100%;border-collapse:collapse;min-width:600px">
+              <thead><tr>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid var(--border)">Transaction</th>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid var(--border)">Direction</th>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid var(--border)">Value</th>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid var(--border)">Date</th>
+                <th style="text-align:left;padding:10px;border-bottom:1px solid var(--border)">Status</th>
+              </tr></thead>
+              <tbody id="tx-rows"><tr><td colspan="5" class="small" style="padding:12px">No transactions loaded yet.</td></tr></tbody>
+            </table>
+          </div>
+          <p class="small">History is provided by public Blockscout explorers where available. A missing result does not mean the wallet is safe or has never transacted.</p>
+        </div>
+      </div>
+    </section>
+
     <section id="dashboard">
       <div class="container">
         <div class="section-heading">
@@ -482,7 +513,7 @@
           </article>
         </div>
         <div class="notice">
-          <strong>Important:</strong> QVault is an independent educational prototype. It does not connect to wallets, inspect transactions, scan for threats or provide post-quantum protection. It is not affiliated with or endorsed by QMS. Never enter a seed phrase, private key or password on this website.
+          <strong>Important:</strong> QVault is an independent educational prototype. Its optional wallet demo reads public account/network data and can display public transaction history on supported explorers. It does not scan token approvals or guarantee security, and it does not provide post-quantum protection. It is not affiliated with or endorsed by QMS. Never enter a seed phrase, private key or password on this website.
         </div>
       </div>
     </section>
@@ -651,7 +682,105 @@
     nextButton.addEventListener("click", () => {
       if (knowledgeIndex < knowledgeQuestions.length - 1) {
         knowledgeIndex++;
-        showKnowledgeQuestion();
+    
+    // Public transaction history via Blockscout v2 APIs. No API key or wallet signature is requested.
+    const txButton = document.getElementById("load-transactions");
+    const txRows = document.getElementById("tx-rows");
+    const txMessage = document.getElementById("tx-message");
+    const txNetwork = document.getElementById("tx-network");
+    const txExplorers = {
+      "0x1": { name: "Ethereum", api: "https://eth.blockscout.com/api/v2/addresses/", explorer: "https://eth.blockscout.com/tx/" },
+      "0xaa36a7": { name: "Sepolia", api: "https://eth-sepolia.blockscout.com/api/v2/addresses/", explorer: "https://eth-sepolia.blockscout.com/tx/" },
+      "0x89": { name: "Polygon", api: "https://polygon.blockscout.com/api/v2/addresses/", explorer: "https://polygon.blockscout.com/tx/" },
+      "0xa": { name: "Optimism", api: "https://optimism.blockscout.com/api/v2/addresses/", explorer: "https://optimism.blockscout.com/tx/" },
+      "0xa4b1": { name: "Arbitrum One", api: "https://arbitrum.blockscout.com/api/v2/addresses/", explorer: "https://arbitrum.blockscout.com/tx/" },
+      "0x2105": { name: "Base", api: "https://base.blockscout.com/api/v2/addresses/", explorer: "https://base.blockscout.com/tx/" }
+    };
+    function addTxCell(row, text) {
+      const cell = document.createElement("td");
+      cell.style.cssText = "padding:10px;border-bottom:1px solid var(--border);vertical-align:top";
+      cell.textContent = text;
+      row.appendChild(cell);
+      return cell;
+    }
+    function formatTxValue(value, decimals, symbol) {
+      try {
+        const n = Number(value) / Math.pow(10, Number(decimals || 18));
+        return (Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 6 }) : "—") + (symbol ? " " + symbol : "");
+      } catch (_) { return "—"; }
+    }
+    async function loadTransactions() {
+      if (!currentAddress || !activeProvider) {
+        txMessage.textContent = "Connect your wallet first.";
+        return;
+      }
+      let chainId;
+      try { chainId = await activeProvider.request({ method: "eth_chainId" }); }
+      catch (_) { txMessage.textContent = "Could not read the wallet network. Try reconnecting."; return; }
+      const cfg = txExplorers[String(chainId).toLowerCase()];
+      txRows.replaceChildren();
+      if (!cfg) {
+        txNetwork.textContent = "Unsupported network";
+        txMessage.textContent = "Transaction history is not configured for this network yet. Switch to Ethereum, Sepolia, Polygon, Optimism, Arbitrum One, or Base.";
+        return;
+      }
+      txNetwork.textContent = cfg.name;
+      txMessage.textContent = "Loading public transaction history…";
+      txButton.disabled = true;
+      try {
+        const response = await fetch(cfg.api + encodeURIComponent(currentAddress) + "/transactions?filter=to%20%7C%20from", { headers: { "accept": "application/json" } });
+        if (!response.ok) throw new Error("Explorer returned HTTP " + response.status);
+        const data = await response.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+        if (!items.length) {
+          const row = document.createElement("tr");
+          const cell = addTxCell(row, "No transactions returned for this address on this network.");
+          cell.colSpan = 5;
+          txRows.appendChild(row);
+          txMessage.textContent = "No transaction records were returned. This is not a security assessment.";
+          return;
+        }
+        items.slice(0, 15).forEach(tx => {
+          const row = document.createElement("tr");
+          const hash = tx.hash || "";
+          const linkCell = addTxCell(row, hash ? hash.slice(0, 10) + "…" + hash.slice(-6) : "Unknown hash");
+          if (hash) {
+            const link = document.createElement("a");
+            link.href = cfg.explorer + encodeURIComponent(hash);
+            link.target = "_blank";
+            link.rel = "noopener noreferrer";
+            link.textContent = "View";
+            link.style.cssText = "display:block;color:var(--bright);font-size:.8rem;margin-top:4px";
+            linkCell.appendChild(link);
+          }
+          const from = (tx.from && tx.from.hash || "").toLowerCase();
+          const direction = from === currentAddress.toLowerCase() ? "Sent" : "Received / interaction";
+          addTxCell(row, direction);
+          const value = tx.value || "0";
+          const decimals = tx.token && tx.token.decimals ? tx.token.decimals : 18;
+          const symbol = tx.token && tx.token.symbol ? tx.token.symbol : ({"0x38":"BNB"}[String(chainId).toLowerCase()] || "native");
+          addTxCell(row, formatTxValue(value, decimals, symbol));
+          const dateValue = tx.timestamp || tx.block_timestamp;
+          const date = dateValue ? new Date(dateValue).toLocaleString() : "—";
+          addTxCell(row, date);
+          addTxCell(row, tx.status === "ok" ? "Success" : (tx.status === "error" ? "Failed" : (tx.status || "Recorded")));
+          txRows.appendChild(row);
+        });
+        txMessage.textContent = "Showing up to 15 recent public records from " + cfg.name + ". Verify details on the linked explorer.";
+      } catch (error) {
+        txMessage.textContent = "Could not load history from the public explorer. It may be unavailable or block this request; try again later or open the explorer manually.";
+        const row = document.createElement("tr");
+        const cell = addTxCell(row, "History unavailable right now.");
+        cell.colSpan = 5;
+        txRows.appendChild(row);
+      } finally {
+        txButton.disabled = false;
+      }
+    }
+    txButton.addEventListener("click", loadTransactions);
+    // Refreshing wallet data also updates transaction-network context; history loads only when explicitly requested.
+
+    showKnowledgeQuestion();
       } else {
         questionElement.textContent = "Quiz Complete!";
         progressElement.textContent = "All 5 questions completed";
@@ -736,6 +865,15 @@
       disconnectWalletButton.hidden = true;
       connectWalletButton.hidden = false;
       walletDot.classList.remove("connected");
+      if (typeof txRows !== "undefined" && txRows) {
+        txRows.replaceChildren();
+        const row = document.createElement("tr");
+        const cell = addTxCell(row, "Connect wallet to load transaction history.");
+        cell.colSpan = 5;
+        txRows.appendChild(row);
+        txNetwork.textContent = "Connect wallet first";
+        txMessage.textContent = "Connect Rabby, then load public transaction history for a supported network.";
+      }
     }
 
     async function refreshWallet() {
@@ -776,6 +914,7 @@
         walletAddress.textContent = shortAddress(accounts[0]);
         walletAddress.title = accounts[0];
         walletNetwork.textContent = networkNames[String(chainId).toLowerCase()] || "Unknown network (" + chainId + ")";
+        txNetwork.textContent = (txExplorers[String(chainId).toLowerCase()] || {}).name || "History not configured";
         walletStatus.textContent = "Wallet connected — public information only.";
         walletDetails.hidden = false;
         disconnectWalletButton.hidden = false;
