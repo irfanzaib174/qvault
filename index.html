@@ -159,12 +159,38 @@
     .footer-inner { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 15px; }
 
     @media (max-width: 760px) {
-      .nav { align-items: flex-start; padding: 17px 0; flex-direction: column; }
-      .nav-links { gap: 13px; }
-      .hero { padding: 65px 0 50px; }
+      .nav { align-items: flex-start; padding: 17px 0; flex-direction: column; gap: 12px; }
+      .nav-links { gap: 10px 14px; width: 100%; }
+      .nav-links a { font-size: .88rem; }
+      .hero { padding: 58px 0 46px; }
       .grid, .dashboard, .roadmap { grid-template-columns: 1fr; }
-      section { padding: 48px 0; }
+      section { padding: 46px 0; }
+      .card { padding: 20px; }
+      .hero p { font-size: 1rem; }
+      .actions { align-items: stretch; }
+      .actions .btn { flex: 1 1 190px; }
     }
+
+    @media (max-width: 480px) {
+      .container { width: min(100% - 28px, 1100px); }
+      .brand { font-size: 1.3rem; }
+      .nav-links { gap: 8px 12px; }
+      .nav-links a { font-size: .82rem; }
+      .hero { padding: 46px 0 38px; }
+      h1 { font-size: clamp(2.1rem, 10vw, 3rem); letter-spacing: -1.2px; }
+      .eyebrow { font-size: .68rem; padding: 5px 9px; }
+      .section-heading h2 { font-size: 1.65rem; }
+      .btn { padding: 11px 14px; }
+      .actions .btn { width: 100%; flex-basis: 100%; }
+      .card { padding: 17px; border-radius: 15px; }
+      .quiz-options button { min-height: 46px; overflow-wrap: anywhere; }
+      .check-item { gap: 9px; }
+      .footer-inner { flex-direction: column; }
+    }
+
+    img, video, iframe { max-width: 100%; }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    :focus-visible { outline: 2px solid var(--bright); outline-offset: 3px; }
   </style>
 </head>
 <body>
