@@ -18,3 +18,12 @@ Idea stage. Research and prototype planning have not yet been completed.
 2. Define the initial prototype.
 3. Explore QMS testnet integration.# qvault
 A proposed post-quantum wallet security project for the QMS ecosystem.
+## Live Demo
+
+Visit QVault: https://irfanzaib174.github.io/qvault/
+
+## Project Status
+
+QVault is an early-stage educational prototype exploring post-quantum wallet security and smart-account concepts.
+
+Note: This prototype does not connect to wallets or provide real security scanning.
