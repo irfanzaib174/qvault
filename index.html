@@ -679,10 +679,6 @@
       restartButton.hidden = true;
     }
 
-    nextButton.addEventListener("click", () => {
-      if (knowledgeIndex < knowledgeQuestions.length - 1) {
-        knowledgeIndex++;
-    
     // Public transaction history via Blockscout v2 APIs. No API key or wallet signature is requested.
     const txButton = document.getElementById("load-transactions");
     const txRows = document.getElementById("tx-rows");
@@ -780,6 +776,11 @@
     txButton.addEventListener("click", loadTransactions);
     // Refreshing wallet data also updates transaction-network context; history loads only when explicitly requested.
 
+
+    nextButton.addEventListener("click", () => {
+      if (knowledgeIndex < knowledgeQuestions.length - 1) {
+        knowledgeIndex++;
+    
     showKnowledgeQuestion();
       } else {
         questionElement.textContent = "Quiz Complete!";
