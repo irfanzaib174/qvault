@@ -166,6 +166,17 @@
     .wallet-detail { padding: 12px; background: #100c1d; border: 1px solid var(--border); border-radius: 10px; min-width: 0; }
     .wallet-detail strong { display: block; color: var(--bright); font-size: .78rem; margin-bottom: 5px; }
     .wallet-detail span { display: block; overflow-wrap: anywhere; font-size: .9rem; }
+    .wallet-tool-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; margin-top:18px; }
+    .metric { padding:16px; background:#100c1d; border:1px solid var(--border); border-radius:12px; min-width:0; }
+    .metric strong { display:block; color:var(--bright); font-size:.78rem; letter-spacing:.04em; }
+    .metric span { display:block; margin-top:8px; overflow-wrap:anywhere; font-size:1.05rem; }
+    .tool-actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+    .tool-actions .btn { font-size:.88rem; }
+    .risk-list { display:grid; gap:10px; margin-top:14px; }
+    .risk-item { display:flex; gap:10px; align-items:flex-start; padding:12px; border:1px solid var(--border); border-radius:10px; background:#100c1d; }
+    .risk-item input { margin-top:6px; accent-color:var(--purple); }
+    .pill-status { display:inline-block; border-radius:99px; padding:4px 9px; background:#251a38; color:var(--bright); font-size:.78rem; }
+    @media (max-width:760px) { .wallet-tool-grid { grid-template-columns:1fr; } }
     .btn:focus-visible, button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid var(--bright); outline-offset: 3px; }
     .btn:disabled { opacity: .6; cursor: wait; }
     @media (max-width: 760px) {
@@ -196,6 +207,7 @@
         <a href="#explore">Explore</a>
         <a href="#architecture">Architecture</a>
         <a href="#wallet-connect">Wallet Connect</a>
+        <a href="#wallet-tools">Wallet Tools</a>
         <a href="#dashboard">Dashboard</a>
         <a href="#knowledge-quiz">Knowledge Quiz</a>
         <a href="#safety">Wallet Safety</a>
@@ -302,7 +314,42 @@
             <button class="btn" id="disconnect-wallet" type="button" hidden>Disconnect</button>
           </div>
         </div>
-        <div class="notice"><strong>Safety:</strong> This demo only requests wallet account access and reads the public address/network. It does not send transactions, scan assets, or guarantee wallet security. Never enter or share a seed phrase or private key.</div>
+        <div class="notice"><strong>Safety:</strong> This demo only requests wallet account access and reads public on-chain information. It does not send transactions, scan smart-contract approvals, or guarantee wallet security. Never enter or share a seed phrase or private key.</div>
+      </div>
+    </section>
+
+    <section id="wallet-tools">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Wallet tools</h2>
+          <p>Quick read-only tools for the connected wallet. Balances are requested from the wallet's current network; explorer links open public blockchain data.</p>
+        </div>
+        <div class="card">
+          <div class="wallet-tool-grid">
+            <div class="metric"><strong>NATIVE BALANCE</strong><span id="native-balance">Connect wallet to load</span><p class="small" id="balance-note">Read-only request; no transaction is sent.</p></div>
+            <div class="metric"><strong>CHAIN ID</strong><span id="chain-id">—</span><p class="small">Network identifier reported by wallet.</p></div>
+            <div class="metric"><strong>CONNECTION STATUS</strong><span id="connection-health">Not connected</span><p class="small">This is connection status, not a security score.</p></div>
+          </div>
+          <div class="tool-actions">
+            <button class="btn primary" id="refresh-wallet" type="button">Refresh wallet data</button>
+            <button class="btn" id="copy-address" type="button" disabled>Copy public address</button>
+            <a class="btn" id="explorer-link" href="#wallet-connect" target="_blank" rel="noopener noreferrer" aria-disabled="true">Open address in explorer</a>
+          </div>
+          <p id="tools-message" class="small" role="status" aria-live="polite">Connect Rabby to load read-only wallet information.</p>
+        </div>
+        <div class="card" style="margin-top:18px">
+          <h3>Personal safety review</h3>
+          <p>These are self-check questions, not an automated wallet audit. Select only what you have verified.</p>
+          <div class="risk-list" id="risk-list">
+            <label class="risk-item"><input type="checkbox"><span>I checked the website domain before connecting my wallet.</span></label>
+            <label class="risk-item"><input type="checkbox"><span>I did not enter a recovery phrase or private key into this website.</span></label>
+            <label class="risk-item"><input type="checkbox"><span>I understand that wallet connection alone does not approve a transaction.</span></label>
+            <label class="risk-item"><input type="checkbox"><span>I review each transaction and signature request inside Rabby before approving.</span></label>
+            <label class="risk-item"><input type="checkbox"><span>I periodically review and revoke unwanted token approvals using a trusted official tool.</span></label>
+          </div>
+          <div class="tool-actions"><span class="pill-status" id="risk-count">0 of 5 reviewed</span><button class="btn" id="reset-risk" type="button">Reset review</button></div>
+          <p class="small">QVault does not inspect or revoke token approvals. Do not trust a site just because it displays a reassuring status.</p>
+        </div>
       </div>
     </section>
 
@@ -633,6 +680,14 @@
     const walletDetails = document.getElementById("wallet-details");
     const walletDot = document.getElementById("wallet-dot");
     const walletMessage = document.getElementById("wallet-message");
+    const nativeBalance = document.getElementById("native-balance");
+    const chainIdElement = document.getElementById("chain-id");
+    const connectionHealth = document.getElementById("connection-health");
+    const refreshWalletButton = document.getElementById("refresh-wallet");
+    const copyAddressButton = document.getElementById("copy-address");
+    const explorerLink = document.getElementById("explorer-link");
+    const toolsMessage = document.getElementById("tools-message");
+    let currentAddress = null;
     let activeProvider = null;
 
     const networkNames = {
@@ -653,7 +708,27 @@
       return address ? address.slice(0, 6) + "…" + address.slice(-4) : "—";
     }
 
+    function explorerFor(chainId, address) {
+      const bases = {
+        "0x1":"https://etherscan.io/address/", "0xaa36a7":"https://sepolia.etherscan.io/address/",
+        "0x89":"https://polygonscan.com/address/", "0x13882":"https://amoy.polygonscan.com/address/",
+        "0xa":"https://optimistic.etherscan.io/address/", "0xa4b1":"https://arbiscan.io/address/",
+        "0x2105":"https://basescan.org/address/", "0x14a34":"https://sepolia.basescan.org/address/",
+        "0x38":"https://bscscan.com/address/", "0x61":"https://testnet.bscscan.com/address/"
+      };
+      return bases[String(chainId).toLowerCase()] ? bases[String(chainId).toLowerCase()] + address : null;
+    }
+
     function showWalletDisconnected(message) {
+      currentAddress = null;
+      nativeBalance.textContent = "Connect wallet to load";
+      chainIdElement.textContent = "—";
+      connectionHealth.textContent = "Not connected";
+      copyAddressButton.disabled = true;
+      explorerLink.href = "#wallet-connect";
+      explorerLink.setAttribute("aria-disabled", "true");
+      explorerLink.style.opacity = ".6";
+      toolsMessage.textContent = "Connect Rabby to load read-only wallet information.";
       walletStatus.textContent = message || "Not connected — no wallet information is being read.";
       walletAddress.textContent = "—";
       walletNetwork.textContent = "—";
@@ -672,6 +747,32 @@
           return;
         }
         const chainId = await activeProvider.request({ method: "eth_chainId" });
+        currentAddress = accounts[0];
+        chainIdElement.textContent = chainId;
+        connectionHealth.textContent = "Connected";
+        copyAddressButton.disabled = false;
+        const explorer = explorerFor(chainId, accounts[0]);
+        if (explorer) {
+          explorerLink.href = explorer;
+          explorerLink.removeAttribute("aria-disabled");
+          explorerLink.style.opacity = "1";
+        } else {
+          explorerLink.href = "#wallet-connect";
+          explorerLink.setAttribute("aria-disabled", "true");
+          explorerLink.style.opacity = ".6";
+        }
+        try {
+          const rawBalance = await activeProvider.request({ method: "eth_getBalance", params: [accounts[0], "latest"] });
+          const wei = BigInt(rawBalance);
+          const whole = wei / 1000000000000000000n;
+          const fraction = (wei % 1000000000000000000n).toString().padStart(18, "0").slice(0, 6).replace(/0+$/, "");
+          const nativeName = ({"0x1":"ETH","0xaa36a7":"ETH","0x89":"POL","0x13882":"POL","0xa":"ETH","0xa4b1":"ETH","0x2105":"ETH","0x14a34":"ETH","0x38":"BNB","0x61":"tBNB"})[String(chainId).toLowerCase()] || "native units";
+          nativeBalance.textContent = whole.toString() + (fraction ? "." + fraction : "") + " " + nativeName;
+          toolsMessage.textContent = explorer ? "Balance updated. Explorer link is available for this network." : "Balance updated. QVault has no configured explorer link for this network.";
+        } catch (balanceError) {
+          nativeBalance.textContent = "Not available";
+          toolsMessage.textContent = "Connected, but this wallet/network did not return a balance.";
+        }
         walletAddress.textContent = shortAddress(accounts[0]);
         walletAddress.title = accounts[0];
         walletNetwork.textContent = networkNames[String(chainId).toLowerCase()] || "Unknown network (" + chainId + ")";
@@ -719,6 +820,41 @@
         connectWalletButton.disabled = false;
         connectWalletButton.textContent = "Connect Wallet";
       }
+    });
+
+    refreshWalletButton.addEventListener("click", async () => {
+      if (!activeProvider) {
+        toolsMessage.textContent = "Connect your wallet first.";
+        return;
+      }
+      refreshWalletButton.disabled = true;
+      refreshWalletButton.textContent = "Refreshing…";
+      await refreshWallet();
+      refreshWalletButton.disabled = false;
+      refreshWalletButton.textContent = "Refresh wallet data";
+    });
+
+    copyAddressButton.addEventListener("click", async () => {
+      if (!currentAddress) return;
+      try {
+        await navigator.clipboard.writeText(currentAddress);
+        toolsMessage.textContent = "Public wallet address copied.";
+      } catch (error) {
+        toolsMessage.textContent = "Copy blocked by browser. Full address: " + currentAddress;
+      }
+    });
+
+    document.getElementById("risk-list").addEventListener("change", () => {
+      const boxes = [...document.querySelectorAll("#risk-list input[type=checkbox]")];
+      const count = boxes.filter(box => box.checked).length;
+      document.getElementById("risk-count").textContent = count + " of " + boxes.length + " reviewed";
+    });
+    document.getElementById("reset-risk").addEventListener("click", () => {
+      document.querySelectorAll("#risk-list input[type=checkbox]").forEach(box => box.checked = false);
+      document.getElementById("risk-count").textContent = "0 of 5 reviewed";
+    });
+    explorerLink.addEventListener("click", event => {
+      if (explorerLink.getAttribute("aria-disabled") === "true") event.preventDefault();
     });
 
     disconnectWalletButton.addEventListener("click", () => {
