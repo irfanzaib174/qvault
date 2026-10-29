@@ -144,6 +144,10 @@
     }
     .quiz-options button:hover { border-color: var(--purple); }
     #quiz-result { margin-top: 14px; color: var(--bright); min-height: 28px; }
+    #knowledge-feedback { margin-top: 14px; color: var(--bright); min-height: 48px; }
+    #knowledge-score { color: var(--green); font-weight: 750; }
+    #knowledge-options button:disabled { opacity: .72; cursor: not-allowed; }
+    [hidden] { display: none !important; }
 
     .roadmap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
     .step-number { color: var(--purple); font-weight: 850; font-size: .85rem; }
@@ -171,6 +175,7 @@
         <a href="#explore">Explore</a>
         <a href="#architecture">Architecture</a>
         <a href="#dashboard">Dashboard</a>
+        <a href="#knowledge-quiz">Knowledge Quiz</a>
         <a href="#safety">Wallet Safety</a>
         <a href="#roadmap">Roadmap</a>
       </nav>
@@ -290,6 +295,37 @@
       </div>
     </section>
 
+
+    <section id="knowledge-quiz">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Quantum Security Knowledge Quiz</h2>
+          <p>Test your knowledge of quantum security, wallet safety, and smart accounts.</p>
+        </div>
+
+        <div class="card">
+          <p id="quiz-progress">Question 1 of 5</p>
+          <h3 id="quiz-question">What is post-quantum cryptography?</h3>
+
+          <div class="quiz-options" id="knowledge-options">
+            <button type="button" data-index="0">A technology that makes computers faster</button>
+            <button type="button" data-index="1">Cryptography designed to resist quantum-computer attacks</button>
+            <button type="button" data-index="2">A type of cryptocurrency</button>
+          </div>
+
+          <p id="knowledge-feedback" aria-live="polite"></p>
+          <p id="knowledge-score">Score: 0</p>
+
+          <button class="btn primary" id="next-question" type="button" hidden>
+            Next Question →
+          </button>
+          <button class="btn" id="restart-quiz" type="button" hidden>
+            Restart Quiz ↺
+          </button>
+        </div>
+      </div>
+    </section>
+
     <section id="safety">
       <div class="container">
         <div class="section-heading">
@@ -394,7 +430,7 @@
       });
     });
 
-    document.querySelectorAll(".quiz-options button").forEach(button => {
+    document.querySelectorAll("#dashboard .quiz-options button").forEach(button => {
       button.addEventListener("click", () => {
         const result = document.getElementById("quiz-result");
         if (button.dataset.answer === "right") {
@@ -404,6 +440,143 @@
         }
       });
     });
+
+
+    // Quantum Security Knowledge Quiz
+    const knowledgeQuestions = [
+      {
+        question: "What is post-quantum cryptography?",
+        options: [
+          "A technology that makes computers faster",
+          "Cryptography designed to resist quantum-computer attacks",
+          "A type of cryptocurrency"
+        ],
+        answer: 1,
+        explanation: "It studies cryptographic methods designed to withstand attacks from future quantum computers."
+      },
+      {
+        question: "What should you do with your wallet recovery phrase?",
+        options: [
+          "Share it with support",
+          "Store it publicly online",
+          "Keep it private and secure"
+        ],
+        answer: 2,
+        explanation: "Anyone who obtains your recovery phrase may gain control of your wallet."
+      },
+      {
+        question: "What is a smart account?",
+        options: [
+          "An account that can use programmable transaction rules",
+          "A guaranteed quantum-proof wallet",
+          "A password manager only"
+        ],
+        answer: 0,
+        explanation: "Smart accounts can support programmable rules, but they are not automatically quantum-resistant."
+      },
+      {
+        question: "What is phishing?",
+        options: [
+          "A blockchain upgrade",
+          "An attempt to trick people into revealing secrets or approving harmful actions",
+          "A wallet backup method"
+        ],
+        answer: 1,
+        explanation: "Always verify website addresses and never share private keys or recovery phrases."
+      },
+      {
+        question: "Does this QVault demo scan real wallets for threats?",
+        options: [
+          "Yes, automatically",
+          "Only when a wallet is connected",
+          "No, it is an educational prototype"
+        ],
+        answer: 2,
+        explanation: "QVault is an educational demo and does not connect to wallets or perform security scans."
+      }
+    ];
+
+    let knowledgeIndex = 0;
+    let knowledgePoints = 0;
+    let knowledgeAnswered = false;
+
+    const questionElement = document.getElementById("quiz-question");
+    const optionsElement = document.getElementById("knowledge-options");
+    const progressElement = document.getElementById("quiz-progress");
+    const feedbackElement = document.getElementById("knowledge-feedback");
+    const scoreElement = document.getElementById("knowledge-score");
+    const nextButton = document.getElementById("next-question");
+    const restartButton = document.getElementById("restart-quiz");
+
+    function showKnowledgeQuestion() {
+      const item = knowledgeQuestions[knowledgeIndex];
+      knowledgeAnswered = false;
+
+      progressElement.textContent =
+        `Question ${knowledgeIndex + 1} of ${knowledgeQuestions.length}`;
+      questionElement.textContent = item.question;
+      feedbackElement.textContent = "";
+      scoreElement.textContent = `Score: ${knowledgePoints}`;
+      optionsElement.replaceChildren();
+
+      item.options.forEach((option, index) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = option;
+
+        button.addEventListener("click", () => {
+          if (knowledgeAnswered) return;
+          knowledgeAnswered = true;
+
+          if (index === item.answer) {
+            knowledgePoints++;
+            feedbackElement.textContent = "Correct! " + item.explanation;
+          } else {
+            feedbackElement.textContent = "Not quite. " + item.explanation;
+          }
+
+          scoreElement.textContent = `Score: ${knowledgePoints}`;
+          optionsElement.querySelectorAll("button").forEach(choice => {
+            choice.disabled = true;
+          });
+
+          nextButton.hidden = false;
+          nextButton.textContent =
+            knowledgeIndex === knowledgeQuestions.length - 1
+              ? "See Results"
+              : "Next Question →";
+        });
+
+        optionsElement.appendChild(button);
+      });
+
+      nextButton.hidden = true;
+      restartButton.hidden = true;
+    }
+
+    nextButton.addEventListener("click", () => {
+      if (knowledgeIndex < knowledgeQuestions.length - 1) {
+        knowledgeIndex++;
+        showKnowledgeQuestion();
+      } else {
+        questionElement.textContent = "Quiz Complete!";
+        progressElement.textContent = "All 5 questions completed";
+        optionsElement.replaceChildren();
+        feedbackElement.textContent =
+          `You scored ${knowledgePoints} out of ${knowledgeQuestions.length}. Keep learning about digital security!`;
+        nextButton.hidden = true;
+        restartButton.hidden = false;
+      }
+    });
+
+    restartButton.addEventListener("click", () => {
+      knowledgeIndex = 0;
+      knowledgePoints = 0;
+      showKnowledgeQuestion();
+    });
+
+    showKnowledgeQuestion();
+
   </script>
 </body>
 </html>
